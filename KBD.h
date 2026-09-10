@@ -8,7 +8,7 @@
 #define KBD_K4 		 GPIO_PIN_0
 #define KBD_K3 		 GPIO_PIN_1
 #define KBD_K2 		 GPIO_PIN_2
-#define KBD_K1 		 GPIO_PIN_10
+#define KBD_K1 		 GPIO_PIN_3
 
 #define	KBD_INPORT_PORT2      SYSCTL_PERIPH_GPIOB
 #define	KBD_INPORT_BASE2      GPIO_PORTB_BASE
