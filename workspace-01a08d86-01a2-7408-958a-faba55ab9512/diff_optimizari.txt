@@ -1,0 +1,1381 @@
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/Draws.c vibro_optimized/Draws.c
+--- vibro_telecomanda_vb3000/Draws.c	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/Draws.c	2026-09-10 20:10:24.702218725 +0000
+@@ -111,7 +111,6 @@
+ 	char text[64];
+ 	//char KText[64];
+     int v1,v2,i;
+-	float f1;
+     switch(MainStatusMachine)
+ 	   {
+ 
+@@ -288,154 +287,8 @@
+ 	       //DisplaySString("Next",102,7,1);
+ 
+ 	   break;
+-	   case MSM_SET4:			 
+-	       ClearPage(0);
+- 		   Chenar();
+-		   DisplaySString("Trigger:", 40, 0,0);
+-
+-
+-			// Desenul
+-			
+- /*
+-			sprintf(text,"Ch %1d ",DetectChannel);
+-			DisplaySString((unsigned char *)text,1,0,selected_Parameter == SELECTED_DetectedChannel);
+-			sprintf(text,"Rct%1d",DetectChannel? IsRectified1 : IsRectified0);
+-			DisplaySString((unsigned char *)text,2,2,selected_Parameter == SELECTED_Rectified);
+-			sprintf(text,"Inv%1d",DetectChannel? IsReverted1 : IsReverted0);
+-			DisplaySString((unsigned char *)text,2,3,selected_Parameter == SELECTED_Reverted);
+-		
+-			DisplaySString("Lev.",2,5,selected_Parameter == SELECTED_Level);
+-			sprintf(text,"%04d",DetectChannel? DetectLevel1 : DetectLevel0);
+-			DisplaySString((unsigned char *)text,2,6,selected_Parameter == SELECTED_Level);
+-
+-			DisplaySString("Smp.",97,1,selected_Parameter == SELECTED_NSamples);
+-			sprintf(text,"%04d",DetectChannel? NSamples1 : NSamples0);
+-			DisplaySString((unsigned char *)text,97,2,selected_Parameter == SELECTED_NSamples);
+-
+-			DisplaySString("Bld.",97,3,selected_Parameter == SELECTED_Blind);
+-			sprintf(text,"%04d",DetectChannel? BlindSamples1 : BlindSamples0);
+-			DisplaySString((unsigned char *)text,97,4,selected_Parameter == SELECTED_Blind);
+-
+-			DisplaySString("Amp.",97,5,selected_Parameter == SELECTED_Amplify);
+-			sprintf(text,"%04d",DetectChannel? Amplify1 : Amplify0);
+-			DisplaySString((unsigned char *)text,97,6,selected_Parameter == SELECTED_Amplify);
+-
+-		    PutHorizontalLine(1,127,8);
+-		    PutVerticalLine(32,1,55);
+-		    PutVerticalLine(95,1,55);
+-
+-			// Desenele
+-			switch(selected_Parameter)
+-				{
+-				case SELECTED_DetectedChannel:
+-				case SELECTED_Rectified:
+-                case SELECTED_Reverted:
+-                case SELECTED_Level:
+-					PutLine(36, 32, 46,32);
+-					if(DetectChannel) 
+-					        v1 = 50 - (float)DetectLevel1 * 0.039; // 1... 1022  -> 50-10
+-						 else
+-					        v1 = 50 - (float)DetectLevel0 * 0.039; // 1... 1022  -> 50-10
+-					if(v1<10) v1=10;
+-					if(v1>50) v1=50;                
+-
+-					if(DetectChannel? IsReverted1 : IsReverted0)
+-					  {
+-					  PutLine(46, 32, 52,50);
+-					  PutLine(52, 50, 58,32);
+-					  if(DetectChannel? IsRectified1 : IsRectified0)	    
+-					    {
+-					    PutLine(58, 32, 64,50);
+-					    PutLine(64, 50, 70,32);
+-						}
+-						else
+-						{
+-					    PutLine(58, 32, 64,10);
+-					    PutLine(64, 10, 70,32);
+-						}
+-					  }
+-					  else
+-					  {
+-					  PutLine(46, 32, 52,10);
+-					  PutLine(52, 10, 58,32);
+-					  if(DetectChannel? IsRectified1 : IsRectified0)
+-					    {
+-					    PutLine(58, 32, 64,10);
+-					    PutLine(64, 10, 70,32);
+-						}
+-						else
+-						{
+-					    PutLine(58, 32, 64,50);
+-					    PutLine(64, 50, 70,32);
+-						}
+-					  }
+-					PutLine(36, v1, 40,v1);
+-					PutPixel(39,v1-1);
+-					PutPixel(39,v1+1);
+-					PutLine(70, 32, 93,32);
+-				break;
+-                case SELECTED_NSamples:
+-				break;
+-                case SELECTED_Blind:
+-				break;
+-                case SELECTED_Amplify:
+-				break;
+-
+-				
+-				
+-				
+-				};
+-
+-			switch(selected_Parameter)
+-			   {								  
+-			   case SELECTED_DetectedChannel:
+-					 if(InDecPlus(&v1)>0) DetectChannel =1;
+-					 if(InDecPlus(&v1)<0) DetectChannel =0;
+-			   break;
+-			   case SELECTED_Rectified: 
+-					 if(DetectChannel)
+-					    {
+-						if(InDecPlus(&v1)>0) IsRectified1 =1 ;
+-					    if(InDecPlus(&v1)<0) IsRectified1 =0 ;
+-						}
+-						else
+-						{
+-						if(InDecPlus(&v1)>0) IsRectified0 =1 ;
+-					    if(InDecPlus(&v1)<0) IsRectified0 =0 ;
+-						};
+-			   break;
+-			   case SELECTED_Reverted: 
+-					 if(DetectChannel)
+-					    {
+-						if(InDecPlus(&v1)>0) IsReverted1 =1 ;
+-					    if(InDecPlus(&v1)<0) IsReverted1 =0 ;
+-						}
+-						else
+-						{
+-						if(InDecPlus(&v1)>0) IsReverted0 =1 ;
+-					    if(InDecPlus(&v1)<0) IsReverted0 =0 ;
+-						};
+-			   break;
+-			   case SELECTED_Level:    if(DetectChannel) InDecrement(&DetectLevel1,1,1023); else InDecrement(&DetectLevel0,0,1023); break;
+-			   case SELECTED_NSamples: if(DetectChannel) InDecrement(&NSamples1,1,50); else InDecrement(&NSamples0,1,50);			    break;
+-			   case SELECTED_Blind:    if(DetectChannel) InDecrement(&BlindSamples1,0,5000); else InDecrement(&BlindSamples0,0,5000); break;
+-			   case SELECTED_Amplify:  if(DetectChannel) InDecrement(&Amplify1,0,18); else InDecrement(&Amplify0,0,18); break;
+-
+-
+-			   }
+-			   
+-			switch(LastKey)
+-			  {
+-			  case KEY_KBSELECT:  selected_Parameter++;  if(selected_Parameter > SELECTED_Amplify) selected_Parameter= SELECTED_DetectedChannel;  break;
+-			  case KEY_KBPREV:    selected_Parameter=SELECTED_OnDelay;  MainStatusMachine=MSM_SET1;	  break;
+-			  //case KEY_KBSLIDE:   MainStatusMachine=MSM_GO_SLIDE;     break;
+-			  //case KEY_KBSWEEP:   MainStatusMachine=MSM_GO_SWEEP;    break;
+-			  case KEY_KBSLIDE:  LastCommand = LC_SLIDE_MODE  | LastCmd, LastCmd = LC_NONE;     break;
+-			  case KEY_KBSWEEP:  LastCommand = LC_SWEEP_MODE  | LastCmd, LastCmd = LC_NONE;     break;
+-			  };
+-			LastKey=KeyNone;  
+- 	        DisplaySString("Prev",1,7,1);
+-*/
++	   case MSM_SET4:
++	       // (in original, continutul era tot comentat - cod mort, sters)
+ 	   break;
+ 	   case MSM_SLIDE:
+ 	       ClearPage(0);
+@@ -456,6 +309,8 @@
+        sprintf((char *)VText,">VVV0000\r");
+        if(SV1) VText[4]='1',FillRect(11,3,11); else FillRect(11,4,11);
+        if(SV2) VText[5]='1',FillRect(59,3,11); else FillRect(59,4,11);
++       // TODO: blocul SV3 pare copy-paste gresit (fara else, acopera
++       // aceeasi locatie ca SV2) - de verificat in hardware
+        if(SV3) VText[6]='1',FillRect(59,4,11); 
+ 		   if(SV4) VText[7]='1',FillRect(107,3,11); else FillRect(107,4,11);
+ 		     //LastCommand |= LC_SLIDE_ACT;
+@@ -565,14 +420,13 @@
+ 								}
+ 				   	 };
+ 				   //*******************************************
+-				   f1= 1 / (float)(TmsecMaxim-TmsecMinim);
+-				   // numarator:  47 (55-8)
+-				   // numitor (TmsecMaxim-TmsecMinim;
+-				   
++				   // Optimizare: aritmetica pe intregi (fara float - pe LM3S2965
++				   // nu exista FPU, floatul e soft si lent)
+ 				   for(i=2;i<126;i++)
+ 				      {
+ 							v2= TabelGrafic[i]-TmsecMinim;
+-							v1= 55-(int)((float)(v2*47)*f1);
++							if(v2<0) v2=0;
++							v1= 55-(v2*47)/(TmsecMaxim-TmsecMinim);
+ 							if(v1<8) v1=8;
+ 							if(v1>55) v1=55;
+ 							PutVerticalLine(i,v1,55);
+@@ -605,20 +459,18 @@
+ 						LastV2=0;
+ 			  	 ///LastCommand = LC_RUN_STOP;
+ 					  LastCommand = LC_RUN_START; 
+-			     break; 
++				break; 
+ 				default:
+-					f1= 1 / (float)(TmsecMaxim-TmsecMinim);
+-				   // numarator:  47 (55-8)
+-				   // numitor (TmsecMaxim-TmsecMinim;
+-				   
++				   // Optimizare: aritmetica pe intregi (fara float)
+ 				   for(i=2;i<126;i++)
+ 				      {
+-							v2= TabelGrafic[i]-TmsecMinim;
+-							v1= 55-(int)((float)(v2*47)*f1);
+-							if(v1<8) v1=8;
+-							if(v1>55) v1=55;
+-							PutVerticalLine(i,v1,55);
+-							}
++				        v2= TabelGrafic[i]-TmsecMinim;
++						if(v2<0) v2=0;
++						v1= 55-(v2*47)/(TmsecMaxim-TmsecMinim);
++						if(v1<8) v1=8;
++						if(v1>55) v1=55;
++						PutVerticalLine(i,v1,55);
++						}
+ 			  };
+ 			LastKey=KeyNone;  
+ 	   break;
+@@ -652,7 +504,9 @@
+      DisplaySString((unsigned char*)text,30,7,0);
+ 	 //DisplaySString(WMessage, 0, 6,0);
+ 
+-	 RefreshPage();
++	 // Optimizare: se retrimite pe afisaj DOAR daca s-a modificat ceva
++	 // (inainte: pagina intreaga la fiecare 10 ms, ~12 ms CPU de fiecare data)
++	 if (LCD_IsDirty()) RefreshPage();
+ 
+ }
+ 
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/KBD.c vibro_optimized/KBD.c
+--- vibro_telecomanda_vb3000/KBD.c	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/KBD.c	2026-09-10 20:05:23.682218725 +0000
+@@ -2,341 +2,94 @@
+ #include "inc/hw_memmap.h"
+ #include "inc/hw_types.h"
+ #include "inc/hw_gpio.h"
+-//#include "driverlib/debug.h"
+-//#include "driverlib/gpio.h"
+-//#include "driverlib/interrupt.h"
+-//#include "driverlib/sysctl.h"
+-
+ 
+ #include "globals.h"
+ #include "KBD.h"
+ 
+-void ReadKeys(void)
+-    {
+-	Key1 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K1 << 2)));  
+-	Key2 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K2 << 2)));  
+-	Key3 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K3 << 2)));  
+-	Key4 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K4 << 2)));  
+-
+-	Key5 =HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K5 << 2)));  
+-	Key6 =HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K6 << 2)));  
+-	Key7 =HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K7 << 2)));  
+-	Key8 =HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K8 << 2)));  
+-
+-	Key9 =HWREG(KBD_INPORT_BASE3 + (GPIO_O_DATA + (KBD_K9 << 2)));  
+-	Key10=HWREG(KBD_INPORT_BASE3 + (GPIO_O_DATA + (KBD_K10<< 2)));  
+-	}
++// Definirea corecta (in original era "extern int KeyNone=-1;" - extern cu
++// initializer e invalid in C si da greseli de link pe unele toolchain-uri)
++int KeyNone=-1;
+ 
++int LastKey=0;
+ 
+ int KeyPlusStatus=KEY_IDLE,KeyMinusStatus=KEY_IDLE,KeySelectStatus=KEY_IDLE;
+ int KeySetStatus=KEY_IDLE,KeySlideStatus=KEY_IDLE,KeySweepStatus=KEY_IDLE;
+ int KeyPrevStatus=KEY_IDLE,KeyNextStatus=KEY_IDLE,KeyRunStatus=KEY_IDLE,KeyStopStatus=KEY_IDLE;
+ int KeyPlusTime=0,KeyMinusTime=0,KeySelectTime=0;
+ int KeySetTime=0,KeySlideTime=0,KeySweepTime=0;
+-int KeyPrevTime=0,KeyNextTime=0,KeyRunTime=0,KeyStopTime;
+-extern int KeyNone=-1;
+-int LastKey=0;
+-
++int KeyPrevTime=0,KeyNextTime=0,KeyRunTime=0,KeyStopTime=0;
+ 
++// ---------------------------------------------------------------------------
++// Optimizare: in loc de 10 bucati de cod copiat-lipit (peste 250 de linii,
++// dintre care blocul KeySlide era DUBLICAT - probabil gresala de copy-paste,
++// ceea ce facea timpii tastei Slide de doua ori mai rapidi ca ai celorlalte),
++// totul e acum table-driven. Comportamentul pentru fiecare tasta ramane exact
++// același ca in original (exceptie: KeySlide nu mai are dublarea accidentala).
++// ---------------------------------------------------------------------------
++typedef struct {
++    unsigned int *pin;      // valoarea citita (Key1..Key10)
++    int *time;              // comparatorul de timp
++    int *status;            // starea tastei
++    int keyid;              // valoarea pusa in LastKey la eliberare
++} KeyDef;
++
++static const KeyDef Keys[10] = {
++    { &Key5,   &KeyPlusTime,   &KeyPlusStatus,   KEY_KBPLUS   },
++    { &Key4,   &KeyMinusTime,  &KeyMinusStatus,  KEY_KBMINUS  },
++    { &Key3,   &KeySelectTime, &KeySelectStatus, KEY_KBSELECT },
++    { &Key10,  &KeySetTime,    &KeySetStatus,    KEY_KBSET    },
++    { &Key9,   &KeySlideTime,  &KeySlideStatus,  KEY_KBSLIDE  },
++    { &Key8,   &KeySweepTime,  &KeySweepStatus,  KEY_KBSWEEP  },
++    { &Key2,   &KeyPrevTime,   &KeyPrevStatus,   KEY_KBPREV   },
++    { &Key7,   &KeyNextTime,   &KeyNextStatus,   KEY_KBNEXT   },
++    { &Key1,   &KeyRunTime,    &KeyRunStatus,    KEY_KBRUN    },
++    { &Key6,   &KeyStopTime,   &KeyStopStatus,   KEY_KBSTOP   },
++};
+ 
+ void ExecuteKeys(){
+-Key1 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K1 << 2)));  
+-Key2 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K2 << 2)));  
+-Key3 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K3 << 2)));  
+-Key4 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K4 << 2)));  
+-
+-Key5 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K5 << 2))))<<4;  
+-Key6 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K6 << 2))))<<4;  
+-Key7 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K7 << 2))))<<4;  
+-Key8 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K8 << 2))))<<4;  
+-
+-Key9 =(HWREG(KBD_INPORT_BASE3 + (GPIO_O_DATA + (KBD_K9 << 2))))<<8;  
+-Key10=(HWREG(KBD_INPORT_BASE3 + (GPIO_O_DATA + (KBD_K10<< 2))))<<8;  
+-
+-
+-
+-if(KeyPlus) {
+-	if(KeyPlusTime <0) {KeyPlusTime=0; KeyPlusStatus = KEY_GO_UP;}   
+-	if(KeyPlusTime <10000) KeyPlusTime++;
+-	}
+-	else {
+-		if(KeyPlusTime >0) {KeyPlusTime=0; KeyPlusStatus = KEY_GO_DOWN;}  
+-		if(KeyPlusTime >-10000) KeyPlusTime--;
+-		}
+-if(KeyMinus) {
+-	 if(KeyMinusTime <0) {KeyMinusTime=0; KeyMinusStatus = KEY_GO_UP;}   
+-	 if(KeyMinusTime <10000) KeyMinusTime++;
+-	 }
+-	 else {
+-		 if(KeyMinusTime >0) {KeyMinusTime=0; KeyMinusStatus = KEY_GO_DOWN;}  
+-		 if(KeyMinusTime >-10000) KeyMinusTime--;
+-		 }
+-if(KeySelect) {
+-	 if(KeySelectTime <0) {KeySelectTime=0; KeySelectStatus = KEY_GO_UP;}   
+-	 if(KeySelectTime <10000) KeySelectTime++;
+-	 }
+-	 else {
+-		 if(KeySelectTime >0) {KeySelectTime=0; KeySelectStatus = KEY_GO_DOWN;}  
+-		 if(KeySelectTime >-10000) KeySelectTime--;
+-		 }
+-if(KeySet){
+-	 if(KeySetTime <0) {KeySetTime=0; KeySetStatus = KEY_GO_UP;}   
+-	 if(KeySetTime <10000) KeySetTime++;
+-	 }
+-	 else {
+-		 if(KeySetTime >0) {KeySetTime=0; KeySetStatus = KEY_GO_DOWN;}  
+-		 if(KeySetTime >-10000) KeySetTime--;
+-		 }
+-if(KeySlide){
+-	 if(KeySlideTime <0) {KeySlideTime=0; KeySlideStatus = KEY_GO_UP;}   
+-	 if(KeySlideTime <10000) KeySlideTime++;
+-	 }
+-	else {
+-		 if(KeySlideTime >0) {KeySlideTime=0; KeySlideStatus = KEY_GO_DOWN;}  
+-		 if(KeySlideTime >-10000) KeySlideTime--;
+-		 }
+-if(KeySlide){
+-	 if(KeySlideTime <0) {KeySlideTime=0; KeySlideStatus = KEY_GO_UP;}   
+-	 if(KeySlideTime <10000) KeySlideTime++;
+-	 }
+-	else {
+-		 if(KeySlideTime >0) {KeySlideTime=0; KeySlideStatus = KEY_GO_DOWN;}  
+-		 if(KeySlideTime >-10000) KeySlideTime--;
+-		 }
+-if(KeySweep){
+-	 if(KeySweepTime <0) {KeySweepTime=0; KeySweepStatus = KEY_GO_UP;}   
+-	 if(KeySweepTime <10000) KeySweepTime++;
+-	 }
+-	else {
+-		 if(KeySweepTime >0) {KeySweepTime=0; KeySweepStatus = KEY_GO_DOWN;}  
+-		 if(KeySweepTime >-10000) KeySweepTime--;
+-		 }
+-if(KeyPrev) {
+-	 if(KeyPrevTime <0) {KeyPrevTime=0; KeyPrevStatus = KEY_GO_UP;}   
+-	 if(KeyPrevTime <10000) KeyPrevTime++;
+-	 }
+-	else {
+-		 if(KeyPrevTime >0) {KeyPrevTime=0; KeyPrevStatus = KEY_GO_DOWN;}  
+-		 if(KeyPrevTime >-10000) KeyPrevTime--;
+-		 }
+-if(KeyNext) {
+-	 if(KeyNextTime <0) {KeyNextTime=0; KeyNextStatus = KEY_GO_UP;}   
+-	 if(KeyNextTime <10000) KeyNextTime++;
+-	 }
+-	else {
+-		 if(KeyNextTime >0) {KeyNextTime=0; KeyNextStatus = KEY_GO_DOWN;}  
+-		 if(KeyNextTime >-10000) KeyNextTime--;
+-		 }
+-if(KeyRun) {
+-	 if(KeyRunTime <0) {KeyRunTime=0; KeyRunStatus = KEY_GO_UP;}   
+-	 if(KeyRunTime <10000) KeyRunTime++;
+-	 }
+-	else {
+-		 if(KeyRunTime >0) {KeyRunTime=0; KeyRunStatus = KEY_GO_DOWN;}  
+-		 if(KeyRunTime >-10000) KeyRunTime--;
+-		 }
+-if(KeyStop) {
+-	 if(KeyStopTime <0) {KeyStopTime=0; KeyStopStatus = KEY_GO_UP;}   
+-	 if(KeyStopTime <10000) KeyStopTime++;
+-	 }
+-	else
+-		 {
+-		 if(KeyStopTime >0) {KeyStopTime=0; KeyStopStatus = KEY_GO_DOWN;}  
+-		 if(KeyStopTime >-10000) KeyStopTime--;
+-		 }
+-
+-
+-
+-switch(KeyPlusStatus) {
+-	 case KEY_GO_UP:	
+-			KeyPlusStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-			LastKey=KEY_KBPLUS;
+-			KeyPlusStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-			if(KeyPlus) KeyPlusStatus=KEY_UP; else KeyPlusStatus=KEY_DOWN;  break;
+-	 };
+-
+-switch(KeyMinusStatus) {
+-	 case KEY_GO_UP:	
+-			KeyMinusStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-			LastKey=KEY_KBMINUS;
+-			KeyMinusStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeyMinus) KeyMinusStatus=KEY_UP; else KeyMinusStatus=KEY_DOWN;  break;
+-	 };
+-
+-switch(KeySelectStatus) {
+-	 case KEY_GO_UP:	
+-			KeySelectStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-			LastKey=KEY_KBSELECT;
+-			KeySelectStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeySelect) KeySelectStatus=KEY_UP; else KeySelectStatus=KEY_DOWN;  break;
+-	 };
+-
+-switch(KeySetStatus){
+-	 case KEY_GO_UP:	
+-			KeySetStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-		  LastKey=KEY_KBSET;
+-			KeySetStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeySet) KeySetStatus=KEY_UP; else KeySetStatus=KEY_DOWN;  break;
+-	 };
+-
+-switch(KeySlideStatus) {
+-	 case KEY_GO_UP:	
+-			KeySlideStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-		  LastKey=KEY_KBSLIDE;
+-			KeySlideStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeySlide) KeySlideStatus=KEY_UP; else KeySlideStatus=KEY_DOWN;  break;
+-	 };
+-
+-switch(KeySweepStatus) {
+-	 case KEY_GO_UP:	
+-			KeySweepStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-		  LastKey=KEY_KBSWEEP;
+-			KeySweepStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeySweep) KeySweepStatus=KEY_UP; else KeySweepStatus=KEY_DOWN;  break;
+-	 
+-	 };
+-
+-switch(KeyPrevStatus) {
+-	 case KEY_GO_UP:	
+-			KeyPrevStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-		  LastKey=KEY_KBPREV;
+-			KeyPrevStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeyPrev) KeyPrevStatus=KEY_UP; else KeyPrevStatus=KEY_DOWN;  break;
+-	 
+-	 };
+-
+-switch(KeyNextStatus)	 {
+-	 case KEY_GO_UP:	
+-			KeyNextStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-			LastKey=KEY_KBNEXT;
+-			KeyNextStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeyNext) KeyNextStatus=KEY_UP; else KeyNextStatus=KEY_DOWN;  break;
+-	 
+-	 };
+-
+-switch(KeyRunStatus) {
+-	 case KEY_GO_UP:	
+-			KeyRunStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-			LastKey=KEY_KBRUN;
+-			KeyRunStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeyRun) KeyRunStatus=KEY_UP; else KeyRunStatus=KEY_DOWN;  break;
+-	 
+-	 };
+-
+-switch(KeyStopStatus)	 {
+-	 case KEY_GO_UP:	
+-			KeyStopStatus=KEY_UP; 
+-			// action on release
+-	 break;
+-	 case KEY_GO_DOWN:
+-			LastKey=KEY_KBSTOP;
+-			KeyStopStatus=KEY_DOWN; 
+-				// action on press
+-	 break;
+-	 case KEY_DOWN: 
+-			// action while pressed
+-	 break;
+-		 //case KEY_UP:  break;
+-	 default: 
+-				if(KeyStop) KeyStopStatus=KEY_UP; else KeyStopStatus=KEY_DOWN;  break;
+-	 
+-	 };
+-
+-
+-
+-
+-
++    int i;
+ 
++    // citirea pinilor - exact ca in original (valori brute pe porti)
++    Key1 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K1 << 2)));  
++    Key2 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K2 << 2)));  
++    Key3 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K3 << 2)));  
++    Key4 =HWREG(KBD_INPORT_BASE1 + (GPIO_O_DATA + (KBD_K4 << 2)));  
++
++    Key5 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K5 << 2))))<<4;  
++    Key6 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K6 << 2))))<<4;  
++    Key7 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K7 << 2))))<<4;  
++    Key8 =(HWREG(KBD_INPORT_BASE2 + (GPIO_O_DATA + (KBD_K8 << 2))))<<4;  
++
++    Key9 =(HWREG(KBD_INPORT_BASE3 + (GPIO_O_DATA + (KBD_K9 << 2))))<<8;  
++    Key10=(HWREG(KBD_INPORT_BASE3 + (GPIO_O_DATA + (KBD_K10<< 2))))<<8;  
++
++    for (i=0;i<10;i++) {
++        const KeyDef *k = &Keys[i];
++
++        if (*k->pin) {
++            if (*k->time < 0) { *k->time = 0; *k->status = KEY_GO_UP; }
++            if (*k->time < 10000) (*k->time)++;
++        } else {
++            if (*k->time > 0) { *k->time = 0; *k->status = KEY_GO_DOWN; }
++            if (*k->time > -10000) (*k->time)--;
++        }
++
++        switch (*k->status) {
++            case KEY_GO_UP:
++                *k->status = KEY_UP;
++                // action on release
++                break;
++            case KEY_GO_DOWN:
++                LastKey = k->keyid;
++                *k->status = KEY_DOWN;
++                // action on press
++                break;
++            case KEY_DOWN:
++                // action while pressed
++                break;
++            default:
++                *k->status = (*k->pin) ? KEY_UP : KEY_DOWN;
++                break;
++        }
++    }
+ }
+-
+-
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/KBD.h vibro_optimized/KBD.h
+--- vibro_telecomanda_vb3000/KBD.h	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/KBD.h	2026-09-10 20:05:32.178218725 +0000
+@@ -77,7 +77,6 @@
+ extern int LastKey;
+ 
+ 
+-void ReadKeys(void);
+ void ExecuteKeys(void);
+ 
+ 
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/Message.c vibro_optimized/Message.c
+--- vibro_telecomanda_vb3000/Message.c	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/Message.c	2026-09-10 20:12:50.674218725 +0000
+@@ -51,7 +51,6 @@
+ 
+ void DecodeMsg(unsigned char *msg){
+  int v1,v2,v3,v4,i;
+- unsigned char c;
+  switch(msg[0]) {
+ 	  case '#':
+ 	  	switch(msg[1]){
+@@ -156,14 +155,18 @@
+ 					 };
+ 					 
+ 				break;
+-				case 'W': case 'w': // RUN time msg
+-					for(i=0;i<20;i++)
+-						 {
+-					 c=msg[i];
+-					 WMessage[i]=c;
+-					 if(c==0) i=21;
++			case 'W': case 'w': // RUN time msg
++					// corectat: copiere limitata + terminator garantat
++					// (in original, un mesaj cu >20 caractere ne-nule lasa
++					// WMessage fara '\0' si DisplaySString citea memorie veche)
++					i=0;
++					while(i<23 && msg[i])
++					 {
++					 WMessage[i]=msg[i];
++					 i++;
+ 					 };
+-					HaveWMessage=1;
++					WMessage[i]=0;
++						HaveWMessage=1;
+ 							break;  
+ 				default:   
+ 
+@@ -180,10 +183,13 @@
+  }
+ 
+ 
++// BUG corectat: in original, `if(v<vmax) return 1;` facea ca o valoare
++// VALIDA (in interval) sa "returneze eroare", iar una invalida (peste vmax)
++// sa returneze 0. Acum: -1 = sub minim, 1 = peste maxim, 0 = in interval.
+ int NotInArea(int v, int vmin, int vmax)
+ {
+    if(v<vmin) return -1;
+-   if(v<vmax)  return 1;
++   if(v>vmax) return 1;
+    return 0;
+ }
+ 
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/OLED.c vibro_optimized/OLED.c
+--- vibro_telecomanda_vb3000/OLED.c	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/OLED.c	2026-09-10 20:13:21.890218725 +0000
+@@ -1,6 +1,37 @@
+  #include "oled.h"
+  #include <stdio.h>
+- 
++
++// ---------------------------------------------------------------------------
++// Optimizare: masca de randuri "modificate". Bit y = randul y al LCDBuff
++// trebuie restrimis pe afisaj. RefreshPage() trimite DOAR randurile
++// modificate (in loc de pagina intreaga la fiecare 10 ms).
++// ---------------------------------------------------------------------------
++unsigned char LCD_DirtyMask = 0xFF; // la pornire tot afisajul e de trimis
++
++void LCD_MarkRow(unsigned char y)
++{
++    if (y < 8) LCD_DirtyMask |= (1 << y);
++}
++
++void LCD_MarkRows(unsigned char y0, unsigned char y1)
++{
++    while (y0 <= y1) LCD_MarkRow(y0++);
++}
++
++void LCD_MarkAll(void)
++{
++    LCD_DirtyMask = 0xFF;
++}
++
++unsigned char LCD_IsDirty(void)
++{
++    return LCD_DirtyMask;
++}
++
++// ---------------------------------------------------------------------------
++// Trimite un byte de COMANDA (RS=0, RW=0) pe interfata paralela.
++// (neschimbat din original - timpii hardware sunt pastrati)
++// ---------------------------------------------------------------------------
+ void out_lcd (unsigned char byte) {
+    HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+    //checkbusy ();
+@@ -15,33 +46,30 @@
+ 
+ }
+ 
++// ---------------------------------------------------------------------------
++// Trimite un byte de DATE (RS=1, RW=0). ENA/RW/RS se seteaza o singura data
++// la inceputul blocului de rand (vezi RefreshPage), aici e doar pulsul ENA.
++// ---------------------------------------------------------------------------
++static void out_lcd_data (unsigned char byte) {
++   HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
++	 SysCtlDelay(50); 
++   HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = byte;             // DATALCDOUT=byte;
++   HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // ENA=1;
++   SysCtlDelay(50);
++   HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
++   SysCtlDelay(50);
++}
++
+ void DisplayReset(void)
+ {
+-//    // Set OLED control pins as outputs
+-//	
+-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1
+-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RESET_PIN << 2))) = 0;   // pin in 0
+-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1
+-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1
+-
+-////    // asteptam un pic
+-////	///SysCtlDelay(500); ///2uS
+-
+-////    for(i=0;i<100; i++)  {  a *=b; };
+-
+-////	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1
+-////	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1
++    // Reset la pornire - se apeleaza O singura data, din main()
+ 		SysCtlDelay(50); // delay_us (1);
+     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
+     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1 RW=1;
+     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1 RS=1;
+     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1 CS1=1;
+     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
+-    //HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RESET_PIN << 2))) = 0;   // pin in 0 RSTLCD=0;
+-    //SysCtlDelay(500); ///10uS delay_us (10);
+-    //HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RESET_PIN << 2))) = LCD_RESET_PIN;   // pin in 1 RSTLCD=1; 
+     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0 CS1=0;
+-    //CS2=1;        
+     out_lcd (0x3F);  ////DISPLAY ON
+     out_lcd (0x40);   ////Y ADRESS = 0
+     out_lcd (0xB8);   ////X ADRESS = 0
+@@ -51,105 +79,70 @@
+     out_lcd (0x40);
+     out_lcd (0xB8);
+     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
+-    //CS1=1;
+     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
+-
++    LCD_MarkAll();
+ }
++
++// ---------------------------------------------------------------------------
++// Optimizari fata de original:
++//  1) NU mai exista DisplayReset() la fiecare refresh (se face o singura
++//     data la pornire) - adresele X/Y se setaza explicit inainte de fiecare
++//     rand, deci resetul era degeaba.
++//  2) Se trimit DOAR randurile din LCD_DirtyMask (inloc de 1024 byte de
++//     fiecare data). Cu ceasul de pe randul 7, in regim normal se trimit
++//     ~128 byte/10ms in loc de ~1100.
++//  3)_RW/RS sunt setate o singura data pe bloc (raman constante in faza
++//     de date), nu la fiecare byte.
++//  4) Bucla interna e una singura (original avea 2 bucle aproape identice).
++// ---------------------------------------------------------------------------
+ void RefreshPage(void){
+-	int x,y; 
+-	DisplayReset();
+-	///ENA ramane in 1 sus!
+-  HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
++	unsigned char x;
++	unsigned char y;
++
++	if (!LCD_DirtyMask) return; // nimic de trimis
++
++	/// prima jumatate: coloane 64..127 (CS1=0, CS2=1)
++	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+ 	SysCtlDelay(50); // delay_us (1);
+-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0 CS1=0;
+-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
+-	for (y=0;y<8;y++)	{
+-     out_lcd (0x3F);
+-     out_lcd (0xB8 | y);
+-     out_lcd (0x40);
+-     for (x=64;x<128;x++)	{
+-	      HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+-				//checkbusy ();
+-			  SysCtlDelay(50); 
+-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // RW=0;
+-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1 RS=1;
+-				HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = LCDBuff[y][x]; // DATALCDOUT=LCDBuff[y][x];
+-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
+-				SysCtlDelay(50); // delay_us (1);
+-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+-				SysCtlDelay(50); // delay_us (1);
+-				}
++	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;     // CS1=0;
++	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN; // CS2=1;
++
++	for (y=0;y<8;y++) {
++		if (!(LCD_DirtyMask & (1<<y))) continue; // randul n-a fost modificat
++		out_lcd (0x3F);
++		out_lcd (0xB8 | y);
++		out_lcd (0x40);
++		// comanda (out_lcd) ramane cu RS=0; pentru date repunem RW=0, RS=1
++		// o singura data pe rand (in original se scriau de 2 ori pe byte)
++		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;         // RW=0;
++		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN; // RS=1;
++		for (x=64;x<128;x++) {
++		  out_lcd_data (LCDBuff[y][x]);
+ 		}
+- 	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+- 	SysCtlDelay(50); // delay_us (1);
+-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1 CS1=1;
+-		
+-  HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = 0;   //  CS2=0; 
+- 	for (y=0;y<8;y++){
++	}
++	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN; // CS1=1;
++
++  /// a doua jumatate: coloane 0..63 (CS1=1, CS2=0)
++	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = 0;     // CS2=0;
++	for (y=0;y<8;y++) {
++		if (!(LCD_DirtyMask & (1<<y))) continue;
+ 		out_lcd (0x3F);
+ 		out_lcd (0xB8 | y);
+ 		out_lcd (0x40);
+-		for (x=0;x<64;x++)	{
+-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+-			//checkbusy ();
+-			SysCtlDelay(50); 
+-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // RW=0;
+-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1 RS=1;
+-			HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = LCDBuff[y][x];////DATALCDOUT=LCDBuff[x+64+r];
+-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
+-			SysCtlDelay(50); // delay_us (1);
+-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+-			SysCtlDelay(50); // delay_us (1);
+-			}
+-    }
++		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;         // RW=0;
++		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN; // RS=1;
++		for (x=0;x<64;x++) {
++		  out_lcd_data (LCDBuff[y][x]);
++		}
++	}
+ 
+-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1 CS1=1;
+-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
+-	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
++	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // CS1=1;
++	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // CS2=1;
++	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // ENA=1;
+ 	SysCtlDelay(50); // delay_us (1);
+ 
+-// 	for(m=0;m<8;m++)  {
+-// 	  DisplaySendCommand(0xB0 + m);
+-// 	  DisplaySendCommand(0x00);
+-// 	  DisplaySendCommand(0x10);
+-// 	  DisplaySendData(0);
+-// 	  DisplaySendData(0);
+-// 	  for(k=0;k<128;k++) DisplaySendData(LCDBuff[m][k]);
+-//	  };
+-}
+- 
+-/*
+-void DisplaySendData(unsigned char c)
+-{
+-	float a=5, b=3;
+-	int i;
+-	 HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = c;   // pin in 1
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // pin in 0
+-	 // asteptam minim 100 nS
+-	 for(i=0;i<2;i++) 	 a*=b;
+-	 b*=a;
+-
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1
+-     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1
+-}
+-
+-void DisplaySendCommand(unsigned char c)
+-{
+-	float a=5, b=3;
+-	int i;
+-	 HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = c;   // pin in 1
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = 0;   // pin in 0
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // pin in 0
+-	 // asteptam minim 100 nS
+-	 for(i=0;i<2;i++) 	 a*=b;
+-	 b*=a;
+-
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1
+-     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1
+-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1
+-}  /// */
++	LCD_DirtyMask = 0; // pagina e la zi
++}
+ 
+ unsigned char LCDBuff[8][128];
+ void ClearPage(unsigned char c)
+@@ -158,6 +151,7 @@
+     for(m=0;m<8;m++)
+  	  for(k=0;k<128;k++) 
+ 	    LCDBuff[m][k]=c;
++	LCD_MarkAll();
+ }
+ void FillRect(int x,int y,int n)
+   {
+@@ -166,27 +160,12 @@
+   x &= 127;
+    for(i=0;i<n;i++)
+      LCDBuff[y][x+i] = 0xff;
+-  
++	LCD_MarkRow((unsigned char)y);
+   }
+ 
+-/* void RefreshPageOLD(void)
+-{
+-	int m,k; 
+-	DisplayReset();
+-	DisplaySendCommand(0xAF);
+- 	DisplaySendCommand(0xC8);
+- 	//DisplaySendCommand(0x2E);  // scrool
+- 	for(m=0;m<8;m++)
+-	  {
+- 	  DisplaySendCommand(0xB0 + m);
+- 	  DisplaySendCommand(0x00);
+- 	  DisplaySendCommand(0x10);
+- 	  DisplaySendData(0);
+- 	  DisplaySendData(0);
+- 	  for(k=0;k<128;k++) DisplaySendData(LCDBuff[m][k]);
+-	  };
+- } ///  */
+-//constant char MascaBit[] ={0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
++// ---------------------------------------------------------------------------
++// PutPixel marcheaza randul ca modificat
++// ---------------------------------------------------------------------------
+ void PutPixel(unsigned int x, unsigned int y)
+ {
+     unsigned int r,b;
+@@ -199,6 +178,7 @@
+       b = y & 0x07; //numarul bitului
+       c = 1 << b; //MascaBit[b];
+       LCDBuff[r][x] |= c;
++      LCD_MarkRow((unsigned char)r);
+ 	  }
+ }
+ void PutImage(const unsigned char *image)
+@@ -210,44 +190,44 @@
+         {
+         LCDBuff[y][x] = image[x+y*128];
+         }
++	LCD_MarkAll();
+     }
+ 
++// ---------------------------------------------------------------------------
++// Optimizare: Bresenham pe INTREGI (original folosea float - pe LM3S2965,
++// fara FPU, floatul e soft si lent; algoritmul nou deseneaza si linii mai
++// continue, fara goluri).
++// ---------------------------------------------------------------------------
+ void PutLine(int x0, int y0, int x1, int y1)
+     {
+-    int dy = y1 - y0;
+     int dx = x1 - x0;
+-    float t = (float) 0.5;                      // offset for rounding
++    int dy = y1 - y0;
++    int adx = (dx < 0) ? -dx : dx;
++    int ady = (dy < 0) ? -dy : dy;
++    int sx  = (dx < 0) ? -1 : 1;
++    int sy  = (dy < 0) ? -1 : 1;
++    int err;
+ 
+     PutPixel(x0, y0);
+ 
+-    //if (Math.abs(dx) > Math.abs(dy))
+-    if ((dx >= 0 ? dx : (-1)*dx) > (dy >= 0 ? dy : (-1)*dy))
+-        {                                       // slope < 1
+-        float m = (float) dy / (float) dx;      // compute slope
+-        t += y0;
+-        dx = (dx < 0) ? -1 : 1;
+-        m *= dx;
+-        while (x0 != x1)
+-            {
+-            x0 += dx;                           // step to next x value
+-            t += m;                             // add slope to y value
+-            PutPixel(x0, (int) t);
+-            }
++    if (adx >= ady) {                      // panta < 1: paspeste in x
++        err = 2 * ady - adx;
++        while (x0 != x1) {
++            x0 += sx;
++            if (err >= 0) { y0 += sy; err -= 2 * adx; }
++            err += 2 * ady;
++            PutPixel(x0, y0);
+         }
+-    else
+-        {                                       // slope >= 1
+-        float m = (float) dx / (float) dy;      // compute slope
+-        t += x0;
+-        dy = (dy < 0) ? -1 : 1;
+-        m *= dy;
+-        while (y0 != y1)
+-            {
+-            y0 += dy;                           // step to next y value
+-            t += m;                             // add slope to x value
+-            PutPixel((int) t, y0);
+-            }
++    } else {                               // panta >= 1: paspeste in y
++        err = 2 * adx - ady;
++        while (y0 != y1) {
++            y0 += sy;
++            if (err >= 0) { x0 += sx; err -= 2 * ady; }
++            err += 2 * adx;
++            PutPixel(x0, y0);
+         }
+     }
++    }
+ void PutVerticalLine(unsigned char x, unsigned char y0, unsigned char y1)
+     {
+     unsigned char i;
+@@ -268,6 +248,7 @@
+                 PutPixel(x, i);
+                 }
+             }
++        // (randurile sunt marcate de PutPixel, pixel cu pixel)
+         }
+     }
+ void PutHorizontalLine(unsigned char x0, unsigned char x1, unsigned char y)
+@@ -290,6 +271,7 @@
+                 PutPixel(i, y);
+                 }
+             }
++        // (randul e marcat de PutPixel, pixel cu pixel)
+         }
+     }
+ 
+@@ -298,7 +280,7 @@
+ 
+ 	int x2,y2;
+ 	x2=x+dx;
+-	y2=y+dy;				     
++	y2=y+dy;		    	
+     PutHorizontalLine(x,x2,y);
+     PutHorizontalLine(x,x2,y2);
+ 	PutVerticalLine(x,y,y2);
+@@ -310,19 +292,19 @@
+ 
+ void DisplayS3Int(int v,unsigned int x, unsigned int y, unsigned char inv)
+ {
+-   	char text[10];
++    char text[10];
+ 	sprintf(text,"%03d",v);
+     DisplaySString ((unsigned char *)text,x,y,inv);
+ }
+ void DisplayS2Int(int v,unsigned int x, unsigned int y, unsigned char inv)
+ {
+-   	char text[10];
++    char text[10];
+ 	sprintf(text,"%02d",v);
+     DisplaySString ((unsigned char *)text,x,y,inv);
+ }
+ void DisplayS4Int(int v,unsigned int x, unsigned int y, unsigned char inv)
+ {
+-   	char text[10];
++    char text[10];
+ 	sprintf(text,"%04d",v);
+     DisplaySString ((unsigned char *)text,x,y,inv);
+ }
+@@ -331,65 +313,60 @@
+ {
+ 	unsigned int var1,var2,var3,a=0;
+ 	if(y >7) return;
++	LCD_MarkRow((unsigned char)y); // se marcheaza la inceput, ca si la intoarcere timpurie randul sa nu ramana netrimis
+ 	var1=x;
+ 	while(*text){
+ 		var3=*text;
+ 		var2=(var3-' ')*6;
+ 		for (a=0;a<6;a++){
+-			if(var1 > 128) return;
++			if(var1 >= 128) return;   // corectat: >= (128 e in afara zonei valide 0..127)
+ 			LCDBuff[y][var1]=font[var2];
+ 			if (inv) LCDBuff[y][var1]^= 0xff;
+ 			var2++;
+ 			var1++;
+ 			}
+- //		LCDBuff[y][var1]=0;
+-//		if (inv) LCDBuff[y][var1]^= 0xff;
+-//		var1++;
+ 		text++;
+ 	}
+-	if (inv) LCDBuff[y][var1] = 0xff;
++	if (inv && var1 < 128) LCDBuff[y][var1] = 0xff;
+ }
+ 
+ //---------------------------------------------------------------------------------------------------
+ void DisplaySStringD (unsigned char *txt,unsigned int x, unsigned int y, unsigned char inv){
+     unsigned int var1,var2,var3,a=0;
+     if(y>6) return;
++	LCD_MarkRows((unsigned char)y, (unsigned char)(y+1));
+ 	var1 = x;
+ 	while (*txt){
+ 	       var3=*txt;
+ 	       if (var3==' ') var3='.';
+ 	       var2=(var3-'-')*18;
+ 	       for (a=0;a<9;a++) 
+-		        {
+-        	   	if (var1>128) return;
+-         		LCDBuff[y][var1]=font2[var2+1];
++	        {
++	            if (var1>=128) return;  // corectat: >=
++	        	LCDBuff[y][var1]=font2[var2+1];
+ 				if (inv) LCDBuff[y][var1] ^= 0xff;
+-			    LCDBuff[y+1][var1]=font2[var2];
++		        LCDBuff[y+1][var1]=font2[var2];
+ 				if (inv) LCDBuff[y+1][var1] ^= 0xff;
+ 
+-        		var2+=2;
+-        		var1++;
+-        	    }
+-//           LCDBuff[y][var1]=font2[var2+1];
+-//		   if (inv) LCDBuff[y][var1]= ^= 0xff);
+-//		   LCDBuff[y+1][var1]=font2[var2];
+-//		   if (inv) LCDBuff[y+1][var1]= ^= 0xff);
+-//           var1++;
+-	       
+-		   txt++;
++		        var2+=2;
++		        var1++;
++	        }
++	       txt++;
+ 	       }
+-
+ }
+ 
+ //---------------------------------------------------------------------------------------------------
++// BUG corectat: bucla interioara originala era "for (j = 0; i < 128; i++)"
++// (incrementa i, nu j) - inversa doar 8 pixeli, nu toata pagina.
+ void invert_lcd(void)
+     {
+     int i,j;
+     for (i = 0; i < 8; i++)
+-      for (j = 0; i < 128; i++)
++      for (j = 0; j < 128; j++)
+         {
+         LCDBuff[i][j] ^= 0xff;
+         }
++    LCD_MarkAll();
+     }
+ 
+ const unsigned char font[]={
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/OLED.h vibro_optimized/OLED.h
+--- vibro_telecomanda_vb3000/OLED.h	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/OLED.h	2026-09-10 20:04:43.322218725 +0000
+@@ -1,3 +1,6 @@
++#ifndef __OLED_H__
++#define __OLED_H__
++
+ #include "inc/hw_ints.h"
+ #include "inc/hw_memmap.h"
+ #include "inc/hw_types.h"
+@@ -8,46 +11,48 @@
+ #include "driverlib/sysctl.h"
+ #include "driverlib/uart.h"
+ 
+-#ifndef __OLED_H__
+-#define __OLED_H__
+-
+ #define	LCD_DATA_PORT        SYSCTL_PERIPH_GPIOA
+ #define	LCD_DATA_BASE        GPIO_PORTA_BASE
+ 
+ 
+ //#define	LCD_CONTROL_PORT     SYSCTL_PERIPH_GPIOG
+ //#define	LCD_CONTROL_BASE     GPIO_PORTG_BASE
+-//#define LCD_CS1_PIN 		     GPIO_PIN_7
+-//#define LCD_RESET_PIN 		 GPIO_PIN_6
+-//#define LCD_RDWR_PIN 		 GPIO_PIN_5
+-//#define LCD_DCMD_PIN 		 GPIO_PIN_4
++//#define LCD_CS1_PIN 	   	     GPIO_PIN_7
++//#define LCD_RESET_PIN 	    GPIO_PIN_6
++//#define LCD_RDWR_PIN 	    GPIO_PIN_5
++//#define LCD_DCMD_PIN 	    GPIO_PIN_4
+ #define	LCD_CONTROL_PORT1     SYSCTL_PERIPH_GPIOG
+ #define	LCD_CONTROL_BASE1     GPIO_PORTG_BASE
+-#define LCD_CS1_PIN 		     GPIO_PIN_7
+-#define LCD_CS2_PIN					 GPIO_PIN_6	
+-#define LCD_RESET_PIN 		 	 GPIO_PIN_5
++#define LCD_CS1_PIN 		    GPIO_PIN_7
++#define LCD_CS2_PIN			GPIO_PIN_6	
++#define LCD_RESET_PIN 	 	 GPIO_PIN_5
+ 
+  
+ #define	LCD_CONTROL_PORT     SYSCTL_PERIPH_GPIOC
+ #define	LCD_CONTROL_BASE    GPIO_PORTC_BASE
+-#define LCD_ENABLE_PIN 		 GPIO_PIN_4
+-#define LCD_RDWR_PIN 		 GPIO_PIN_5
+-#define LCD_DCMD_PIN 		 GPIO_PIN_6
++#define LCD_ENABLE_PIN 		GPIO_PIN_4
++#define LCD_RDWR_PIN 		GPIO_PIN_5
++#define LCD_DCMD_PIN 		GPIO_PIN_6
+ 
+ 
+ #define	COM1_PORT            SYSCTL_PERIPH_GPIOD
+ #define	COM1_BASE            GPIO_PORTD_BASE
+-#define COM1_TXENA_PIN 		 GPIO_PIN_1
++#define COM1_TXENA_PIN 		GPIO_PIN_1
+ extern const unsigned char font[];
+-extern const unsigned char siglaSeletron[];
+ extern const unsigned char font2[];
+ extern const unsigned char siglaSeletron[];
+ 
+ extern void DisplayReset(void);
+ 
+-extern void DisplaySendData(unsigned char c);
+-void DisplaySendCommand(unsigned char c);
+ extern unsigned char LCDBuff[8][128];
++
++// --- urmarire randuri modificate (optimizare RefreshPage) ---
++extern unsigned char LCD_DirtyMask;
++void LCD_MarkRow(unsigned char y);
++void LCD_MarkRows(unsigned char y0, unsigned char y1);
++void LCD_MarkAll(void);
++unsigned char LCD_IsDirty(void);
++
+ void ClearPage(unsigned char);
+ void RefreshPage(void);
+ void PutPixel(unsigned int x, unsigned int y);
+Only in vibro_optimized: OPTIMIZARI.md
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/TimerProg.c vibro_optimized/TimerProg.c
+--- vibro_telecomanda_vb3000/TimerProg.c	2026-09-10 19:54:45.642218725 +0000
++++ vibro_optimized/TimerProg.c	2026-09-10 20:11:44.570218725 +0000
+@@ -26,7 +26,8 @@
+ 	TimerLoadSet(TIMER1_BASE,TIMER_B,TIMER_1B_LOAD_INTERVAL); // set the timer load value after it reaches 0
+ 	TimerControlStall (TIMER1_BASE, TIMER_B, true); // set the timer to stall during debug
+ 	// Disable the timer A and B triggers for the ADC
+-    HWREG(TIMER1_BASE + TIMER_O_CTL) = (HWREG(TIMER1_BASE + TIMER_O_CTL) & (~(TIMER_CTL_TBOTE | TIMER_CTL_TBOTE)));
++	// (corectat: in original era TBOTE | TBOTE - probabil TAOTE | TBOTE)
++    HWREG(TIMER1_BASE + TIMER_O_CTL) = (HWREG(TIMER1_BASE + TIMER_O_CTL) & (~(TIMER_CTL_TAOTE | TIMER_CTL_TBOTE)));
+     // Enable the timers.
+     TimerEnable(TIMER1_BASE, TIMER_BOTH);
+ 	}
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/UART_GEN.c vibro_optimized/UART_GEN.c
+--- vibro_telecomanda_vb3000/UART_GEN.c	2026-09-10 19:54:45.646218725 +0000
++++ vibro_optimized/UART_GEN.c	2026-09-10 20:11:04.454218725 +0000
+@@ -69,15 +69,22 @@
+ 					   UART1IndexRx = 0;
+ 					   }
+ 	        	break;
+-	        	case UART_RX_START_CHARACTER:
++        case UART_RX_START_CHARACTER:
+ 					// Reset buffer index
+ 					UART1IndexRx = 0;
+-	        	default:
+-					UART1RxBuffer[UART1IndexRx] = UART1RxData;
+-	            	UART1IndexRx ++;
+-					UART1RxBuffer[UART1IndexRx] = 0;
+-	        		if (UART1IndexRx >= UART_MAX_RX_BUFFER_SIZE)  // clear buffer
+-	            		UART1IndexRx = 0;
++        	default:
++					// corectat: in original, la ultimul index valabil (255)
++					// se scria in plus 1 byte DIN AFARA bufferului
++					// (UART1RxBuffer[256]); acum terminatorul sta mereu
++					// in interior si bufferul se curata la suparincare
++					if (UART1IndexRx < UART_MAX_RX_BUFFER_SIZE - 1)
++					 {
++					 UART1RxBuffer[UART1IndexRx] = UART1RxData;
++					 UART1RxBuffer[UART1IndexRx + 1] = 0;
++					 UART1IndexRx++;
++					 }
++					else
++					 UART1IndexRx = 0;
+ 						
+ 				}//end switch (UART1RxData)
+ 			} // end while read from FIFO
+@@ -140,8 +147,21 @@
+ 	{
+ 	unsigned int i;
+ 	unsigned char c;
++	unsigned long timeout;
+     if(text[0] == 0) return;
+-	while(UART1FLAG_TxEmpty == 0); // astept terminarea transmisiei anterioare
++	// corectat: busy-waitul original NU avea timeout - daca TX nu se
++	// terminase (linie blocata, receptor mort), intregul sistem ramanea
++	// agalat aici pentru totdeauna. Acum: astept maxim ~50 ms si repornesc
++	// starea de transmitere.
++	timeout = 0;
++	while(UART1FLAG_TxEmpty == 0 && timeout < 600000) timeout++;
++	if(UART1FLAG_TxEmpty == 0)
++	 {
++	 // transmisie anterioara blocata - fortez starea si continui
++	 SelUART1TransmitDisable();
++	 UART1FLAG_TxEmpty = 1;
++	 UARTIntDisable(UART1_BASE, UART_INT_TX);
++	 }
+ 	for(i=0;i< UART_MAX_TX_BUFFER_SIZE- 4;i++)
+ 	   {
+ 	   c=text[i] ;
+diff -ru '--exclude=driverlib' '--exclude=inc' '--exclude=.git' vibro_telecomanda_vb3000/sel_timer.h vibro_optimized/sel_timer.h
+--- vibro_telecomanda_vb3000/sel_timer.h	2026-09-10 19:54:45.658218725 +0000
++++ vibro_optimized/sel_timer.h	2026-09-10 20:12:21.378218725 +0000
+@@ -28,7 +28,10 @@
+ //#define TIMER_1_LOAD_INTERVAL					(SysCtlClockGet() / 1000)
+ #define TIMER_1A_DESIRED_INITIAL_FRECQUENCY		100
+ 
+-// Timer 1 B configuration for 1/5 s
++// Timer 1 B - ATENTIE: cu prescaler 255 si load 1000 perioada reala e
++// 50MHz/(256*1000) = 5.12 ms, NU 1 ms (comentariul original era gresit).
++// Bit1ms nu e folosit ca flag de 1 ms in codul actual, deci nu am schimbat
++// timpii hardware. Pentru 1 ms ar fi: prescaler 255, load 195.
+ #define TIMER_1B_PRESCALLER_VALUE				255   //has to be max 255 (0xff)
+ #define TIMER_1B_LOAD_INTERVAL					1000
+ 
