@@ -1,6 +1,37 @@
  #include "oled.h"
  #include <stdio.h>
- 
+
+// ---------------------------------------------------------------------------
+// Optimizare: masca de randuri "modificate". Bit y = randul y al LCDBuff
+// trebuie restrimis pe afisaj. RefreshPage() trimite DOAR randurile
+// modificate (in loc de pagina intreaga la fiecare 10 ms).
+// ---------------------------------------------------------------------------
+unsigned char LCD_DirtyMask = 0xFF; // la pornire tot afisajul e de trimis
+
+void LCD_MarkRow(unsigned char y)
+{
+    if (y < 8) LCD_DirtyMask |= (1 << y);
+}
+
+void LCD_MarkRows(unsigned char y0, unsigned char y1)
+{
+    while (y0 <= y1) LCD_MarkRow(y0++);
+}
+
+void LCD_MarkAll(void)
+{
+    LCD_DirtyMask = 0xFF;
+}
+
+unsigned char LCD_IsDirty(void)
+{
+    return LCD_DirtyMask;
+}
+
+// ---------------------------------------------------------------------------
+// Trimite un byte de COMANDA (RS=0, RW=0) pe interfata paralela.
+// (neschimbat din original - timpii hardware sunt pastrati)
+// ---------------------------------------------------------------------------
 void out_lcd (unsigned char byte) {
    HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
    //checkbusy ();
@@ -15,33 +46,30 @@ void out_lcd (unsigned char byte) {
 
 }
 
+// ---------------------------------------------------------------------------
+// Trimite un byte de DATE (RS=1, RW=0). ENA/RW/RS se seteaza o singura data
+// la inceputul blocului de rand (vezi RefreshPage), aici e doar pulsul ENA.
+// ---------------------------------------------------------------------------
+static void out_lcd_data (unsigned char byte) {
+   HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+	 SysCtlDelay(50); 
+   HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = byte;             // DATALCDOUT=byte;
+   HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // ENA=1;
+   SysCtlDelay(50);
+   HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+   SysCtlDelay(50);
+}
+
 void DisplayReset(void)
 {
-//    // Set OLED control pins as outputs
-//	
-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1
-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RESET_PIN << 2))) = 0;   // pin in 0
-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1
-////	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1
-
-////    // asteptam un pic
-////	///SysCtlDelay(500); ///2uS
-
-////    for(i=0;i<100; i++)  {  a *=b; };
-
-////	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1
-////	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1
+    // Reset la pornire - se apeleaza O singura data, din main()
 		SysCtlDelay(50); // delay_us (1);
     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1 RW=1;
     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1 RS=1;
     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1 CS1=1;
     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
-    //HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RESET_PIN << 2))) = 0;   // pin in 0 RSTLCD=0;
-    //SysCtlDelay(500); ///10uS delay_us (10);
-    //HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RESET_PIN << 2))) = LCD_RESET_PIN;   // pin in 1 RSTLCD=1; 
     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0 CS1=0;
-    //CS2=1;        
     out_lcd (0x3F);  ////DISPLAY ON
     out_lcd (0x40);   ////Y ADRESS = 0
     out_lcd (0xB8);   ////X ADRESS = 0
@@ -51,105 +79,70 @@ void DisplayReset(void)
     out_lcd (0x40);
     out_lcd (0xB8);
     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
-    //CS1=1;
     HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
-
+    LCD_MarkAll();
 }
+
+// ---------------------------------------------------------------------------
+// Optimizari fata de original:
+//  1) NU mai exista DisplayReset() la fiecare refresh (se face o singura
+//     data la pornire) - adresele X/Y se setaza explicit inainte de fiecare
+//     rand, deci resetul era degeaba.
+//  2) Se trimit DOAR randurile din LCD_DirtyMask (inloc de 1024 byte de
+//     fiecare data). Cu ceasul de pe randul 7, in regim normal se trimit
+//     ~128 byte/10ms in loc de ~1100.
+//  3)_RW/RS sunt setate o singura data pe bloc (raman constante in faza
+//     de date), nu la fiecare byte.
+//  4) Bucla interna e una singura (original avea 2 bucle aproape identice).
+// ---------------------------------------------------------------------------
 void RefreshPage(void){
-	int x,y; 
-	DisplayReset();
-	///ENA ramane in 1 sus!
-  HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
+	unsigned char x;
+	unsigned char y;
+
+	if (!LCD_DirtyMask) return; // nimic de trimis
+
+	/// prima jumatate: coloane 64..127 (CS1=0, CS2=1)
+	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
 	SysCtlDelay(50); // delay_us (1);
-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0 CS1=0;
-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
-	for (y=0;y<8;y++)	{
-     out_lcd (0x3F);
-     out_lcd (0xB8 | y);
-     out_lcd (0x40);
-     for (x=64;x<128;x++)	{
-	      HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
-				//checkbusy ();
-			  SysCtlDelay(50); 
-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // RW=0;
-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1 RS=1;
-				HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = LCDBuff[y][x]; // DATALCDOUT=LCDBuff[y][x];
-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
-				SysCtlDelay(50); // delay_us (1);
-				HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
-				SysCtlDelay(50); // delay_us (1);
-				}
-		}
- 	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
- 	SysCtlDelay(50); // delay_us (1);
-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1 CS1=1;
-		
-  HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = 0;   //  CS2=0; 
- 	for (y=0;y<8;y++){
+	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;     // CS1=0;
+	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN; // CS2=1;
+
+	for (y=0;y<8;y++) {
+		if (!(LCD_DirtyMask & (1<<y))) continue; // randul n-a fost modificat
 		out_lcd (0x3F);
 		out_lcd (0xB8 | y);
 		out_lcd (0x40);
-		for (x=0;x<64;x++)	{
-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
-			//checkbusy ();
-			SysCtlDelay(50); 
-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // RW=0;
-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1 RS=1;
-			HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = LCDBuff[y][x];////DATALCDOUT=LCDBuff[x+64+r];
-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
-			SysCtlDelay(50); // delay_us (1);
-			HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = 0;   // ENA=0;
-			SysCtlDelay(50); // delay_us (1);
-			}
-    }
+		// comanda (out_lcd) ramane cu RS=0; pentru date repunem RW=0, RS=1
+		// o singura data pe rand (in original se scriau de 2 ori pe byte)
+		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;         // RW=0;
+		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN; // RS=1;
+		for (x=64;x<128;x++) {
+		  out_lcd_data (LCDBuff[y][x]);
+		}
+	}
+	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN; // CS1=1;
 
-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1 CS1=1;
-	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // pin in 1 CS2=1;
-	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // pin in 1 ENA=1;
+  /// a doua jumatate: coloane 0..63 (CS1=1, CS2=0)
+	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = 0;     // CS2=0;
+	for (y=0;y<8;y++) {
+		if (!(LCD_DirtyMask & (1<<y))) continue;
+		out_lcd (0x3F);
+		out_lcd (0xB8 | y);
+		out_lcd (0x40);
+		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;         // RW=0;
+		HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN; // RS=1;
+		for (x=0;x<64;x++) {
+		  out_lcd_data (LCDBuff[y][x]);
+		}
+	}
+
+	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // CS1=1;
+	HWREG(LCD_CONTROL_BASE1 + (GPIO_O_DATA + (LCD_CS2_PIN << 2))) = LCD_CS2_PIN;   // CS2=1;
+	HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_ENABLE_PIN << 2))) = LCD_ENABLE_PIN;   // ENA=1;
 	SysCtlDelay(50); // delay_us (1);
 
-// 	for(m=0;m<8;m++)  {
-// 	  DisplaySendCommand(0xB0 + m);
-// 	  DisplaySendCommand(0x00);
-// 	  DisplaySendCommand(0x10);
-// 	  DisplaySendData(0);
-// 	  DisplaySendData(0);
-// 	  for(k=0;k<128;k++) DisplaySendData(LCDBuff[m][k]);
-//	  };
+	LCD_DirtyMask = 0; // pagina e la zi
 }
- 
-/*
-void DisplaySendData(unsigned char c)
-{
-	float a=5, b=3;
-	int i;
-	 HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = c;   // pin in 1
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // pin in 0
-	 // asteptam minim 100 nS
-	 for(i=0;i<2;i++) 	 a*=b;
-	 b*=a;
-
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1
-     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1
-}
-
-void DisplaySendCommand(unsigned char c)
-{
-	float a=5, b=3;
-	int i;
-	 HWREG(LCD_DATA_BASE + (GPIO_O_DATA + (0XFF << 2))) = c;   // pin in 1
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = 0;   // pin in 0
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = 0;   // pin in 0
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = 0;   // pin in 0
-	 // asteptam minim 100 nS
-	 for(i=0;i<2;i++) 	 a*=b;
-	 b*=a;
-
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_RDWR_PIN << 2))) = LCD_RDWR_PIN;   // pin in 1
-     HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_CS1_PIN << 2))) = LCD_CS1_PIN;   // pin in 1
-	 HWREG(LCD_CONTROL_BASE + (GPIO_O_DATA + (LCD_DCMD_PIN << 2))) = LCD_DCMD_PIN;   // pin in 1
-}  /// */
 
 unsigned char LCDBuff[8][128];
 void ClearPage(unsigned char c)
@@ -158,6 +151,7 @@ void ClearPage(unsigned char c)
     for(m=0;m<8;m++)
  	  for(k=0;k<128;k++) 
 	    LCDBuff[m][k]=c;
+	LCD_MarkAll();
 }
 void FillRect(int x,int y,int n)
   {
@@ -166,27 +160,12 @@ void FillRect(int x,int y,int n)
   x &= 127;
    for(i=0;i<n;i++)
      LCDBuff[y][x+i] = 0xff;
-  
+	LCD_MarkRow((unsigned char)y);
   }
 
-/* void RefreshPageOLD(void)
-{
-	int m,k; 
-	DisplayReset();
-	DisplaySendCommand(0xAF);
- 	DisplaySendCommand(0xC8);
- 	//DisplaySendCommand(0x2E);  // scrool
- 	for(m=0;m<8;m++)
-	  {
- 	  DisplaySendCommand(0xB0 + m);
- 	  DisplaySendCommand(0x00);
- 	  DisplaySendCommand(0x10);
- 	  DisplaySendData(0);
- 	  DisplaySendData(0);
- 	  for(k=0;k<128;k++) DisplaySendData(LCDBuff[m][k]);
-	  };
- } ///  */
-//constant char MascaBit[] ={0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+// ---------------------------------------------------------------------------
+// PutPixel marcheaza randul ca modificat
+// ---------------------------------------------------------------------------
 void PutPixel(unsigned int x, unsigned int y)
 {
     unsigned int r,b;
@@ -199,6 +178,7 @@ void PutPixel(unsigned int x, unsigned int y)
       b = y & 0x07; //numarul bitului
       c = 1 << b; //MascaBit[b];
       LCDBuff[r][x] |= c;
+      LCD_MarkRow((unsigned char)r);
 	  }
 }
 void PutImage(const unsigned char *image)
@@ -210,43 +190,43 @@ void PutImage(const unsigned char *image)
         {
         LCDBuff[y][x] = image[x+y*128];
         }
+	LCD_MarkAll();
     }
 
+// ---------------------------------------------------------------------------
+// Optimizare: Bresenham pe INTREGI (original folosea float - pe LM3S2965,
+// fara FPU, floatul e soft si lent; algoritmul nou deseneaza si linii mai
+// continue, fara goluri).
+// ---------------------------------------------------------------------------
 void PutLine(int x0, int y0, int x1, int y1)
     {
-    int dy = y1 - y0;
     int dx = x1 - x0;
-    float t = (float) 0.5;                      // offset for rounding
+    int dy = y1 - y0;
+    int adx = (dx < 0) ? -dx : dx;
+    int ady = (dy < 0) ? -dy : dy;
+    int sx  = (dx < 0) ? -1 : 1;
+    int sy  = (dy < 0) ? -1 : 1;
+    int err;
 
     PutPixel(x0, y0);
 
-    //if (Math.abs(dx) > Math.abs(dy))
-    if ((dx >= 0 ? dx : (-1)*dx) > (dy >= 0 ? dy : (-1)*dy))
-        {                                       // slope < 1
-        float m = (float) dy / (float) dx;      // compute slope
-        t += y0;
-        dx = (dx < 0) ? -1 : 1;
-        m *= dx;
-        while (x0 != x1)
-            {
-            x0 += dx;                           // step to next x value
-            t += m;                             // add slope to y value
-            PutPixel(x0, (int) t);
-            }
+    if (adx >= ady) {                      // panta < 1: paspeste in x
+        err = 2 * ady - adx;
+        while (x0 != x1) {
+            x0 += sx;
+            if (err >= 0) { y0 += sy; err -= 2 * adx; }
+            err += 2 * ady;
+            PutPixel(x0, y0);
         }
-    else
-        {                                       // slope >= 1
-        float m = (float) dx / (float) dy;      // compute slope
-        t += x0;
-        dy = (dy < 0) ? -1 : 1;
-        m *= dy;
-        while (y0 != y1)
-            {
-            y0 += dy;                           // step to next y value
-            t += m;                             // add slope to x value
-            PutPixel((int) t, y0);
-            }
+    } else {                               // panta >= 1: paspeste in y
+        err = 2 * adx - ady;
+        while (y0 != y1) {
+            y0 += sy;
+            if (err >= 0) { x0 += sx; err -= 2 * ady; }
+            err += 2 * adx;
+            PutPixel(x0, y0);
         }
+    }
     }
 void PutVerticalLine(unsigned char x, unsigned char y0, unsigned char y1)
     {
@@ -268,6 +248,7 @@ void PutVerticalLine(unsigned char x, unsigned char y0, unsigned char y1)
                 PutPixel(x, i);
                 }
             }
+        // (randurile sunt marcate de PutPixel, pixel cu pixel)
         }
     }
 void PutHorizontalLine(unsigned char x0, unsigned char x1, unsigned char y)
@@ -290,6 +271,7 @@ void PutHorizontalLine(unsigned char x0, unsigned char x1, unsigned char y)
                 PutPixel(i, y);
                 }
             }
+        // (randul e marcat de PutPixel, pixel cu pixel)
         }
     }
 
@@ -298,7 +280,7 @@ void Rectangle(int x, int y, int dx, int dy)
 
 	int x2,y2;
 	x2=x+dx;
-	y2=y+dy;				     
+	y2=y+dy;		    	
     PutHorizontalLine(x,x2,y);
     PutHorizontalLine(x,x2,y2);
 	PutVerticalLine(x,y,y2);
@@ -310,19 +292,19 @@ void Rectangle(int x, int y, int dx, int dy)
 
 void DisplayS3Int(int v,unsigned int x, unsigned int y, unsigned char inv)
 {
-   	char text[10];
+    char text[10];
 	sprintf(text,"%03d",v);
     DisplaySString ((unsigned char *)text,x,y,inv);
 }
 void DisplayS2Int(int v,unsigned int x, unsigned int y, unsigned char inv)
 {
-   	char text[10];
+    char text[10];
 	sprintf(text,"%02d",v);
     DisplaySString ((unsigned char *)text,x,y,inv);
 }
 void DisplayS4Int(int v,unsigned int x, unsigned int y, unsigned char inv)
 {
-   	char text[10];
+    char text[10];
 	sprintf(text,"%04d",v);
     DisplaySString ((unsigned char *)text,x,y,inv);
 }
@@ -331,65 +313,60 @@ void DisplaySString (unsigned char *text,unsigned int x, unsigned int y, unsigne
 {
 	unsigned int var1,var2,var3,a=0;
 	if(y >7) return;
+	LCD_MarkRow((unsigned char)y); // se marcheaza la inceput, ca si la intoarcere timpurie randul sa nu ramana netrimis
 	var1=x;
 	while(*text){
 		var3=*text;
 		var2=(var3-' ')*6;
 		for (a=0;a<6;a++){
-			if(var1 > 128) return;
+			if(var1 >= 128) return;   // corectat: >= (128 e in afara zonei valide 0..127)
 			LCDBuff[y][var1]=font[var2];
 			if (inv) LCDBuff[y][var1]^= 0xff;
 			var2++;
 			var1++;
 			}
- //		LCDBuff[y][var1]=0;
-//		if (inv) LCDBuff[y][var1]^= 0xff;
-//		var1++;
 		text++;
 	}
-	if (inv) LCDBuff[y][var1] = 0xff;
+	if (inv && var1 < 128) LCDBuff[y][var1] = 0xff;
 }
 
 //---------------------------------------------------------------------------------------------------
 void DisplaySStringD (unsigned char *txt,unsigned int x, unsigned int y, unsigned char inv){
     unsigned int var1,var2,var3,a=0;
     if(y>6) return;
+	LCD_MarkRows((unsigned char)y, (unsigned char)(y+1));
 	var1 = x;
 	while (*txt){
 	       var3=*txt;
 	       if (var3==' ') var3='.';
 	       var2=(var3-'-')*18;
 	       for (a=0;a<9;a++) 
-		        {
-        	   	if (var1>128) return;
-         		LCDBuff[y][var1]=font2[var2+1];
+	        {
+	            if (var1>=128) return;  // corectat: >=
+	        	LCDBuff[y][var1]=font2[var2+1];
 				if (inv) LCDBuff[y][var1] ^= 0xff;
-			    LCDBuff[y+1][var1]=font2[var2];
+		        LCDBuff[y+1][var1]=font2[var2];
 				if (inv) LCDBuff[y+1][var1] ^= 0xff;
 
-        		var2+=2;
-        		var1++;
-        	    }
-//           LCDBuff[y][var1]=font2[var2+1];
-//		   if (inv) LCDBuff[y][var1]= ^= 0xff);
-//		   LCDBuff[y+1][var1]=font2[var2];
-//		   if (inv) LCDBuff[y+1][var1]= ^= 0xff);
-//           var1++;
-	       
-		   txt++;
+		        var2+=2;
+		        var1++;
+	        }
+	       txt++;
 	       }
-
 }
 
 //---------------------------------------------------------------------------------------------------
+// BUG corectat: bucla interioara originala era "for (j = 0; i < 128; i++)"
+// (incrementa i, nu j) - inversa doar 8 pixeli, nu toata pagina.
 void invert_lcd(void)
     {
     int i,j;
     for (i = 0; i < 8; i++)
-      for (j = 0; i < 128; i++)
+      for (j = 0; j < 128; j++)
         {
         LCDBuff[i][j] ^= 0xff;
         }
+    LCD_MarkAll();
     }
 
 const unsigned char font[]={

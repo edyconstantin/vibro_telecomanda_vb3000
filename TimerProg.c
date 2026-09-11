@@ -26,7 +26,8 @@ void SelTimer1Init(void)
 	TimerLoadSet(TIMER1_BASE,TIMER_B,TIMER_1B_LOAD_INTERVAL); // set the timer load value after it reaches 0
 	TimerControlStall (TIMER1_BASE, TIMER_B, true); // set the timer to stall during debug
 	// Disable the timer A and B triggers for the ADC
-    HWREG(TIMER1_BASE + TIMER_O_CTL) = (HWREG(TIMER1_BASE + TIMER_O_CTL) & (~(TIMER_CTL_TBOTE | TIMER_CTL_TBOTE)));
+	// (corectat: in original era TBOTE | TBOTE - probabil TAOTE | TBOTE)
+    HWREG(TIMER1_BASE + TIMER_O_CTL) = (HWREG(TIMER1_BASE + TIMER_O_CTL) & (~(TIMER_CTL_TAOTE | TIMER_CTL_TBOTE)));
     // Enable the timers.
     TimerEnable(TIMER1_BASE, TIMER_BOTH);
 	}

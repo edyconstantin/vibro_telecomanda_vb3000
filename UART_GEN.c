@@ -69,15 +69,22 @@ void UART1FIFOIntHandler(void)
 					   UART1IndexRx = 0;
 					   }
 	        	break;
-	        	case UART_RX_START_CHARACTER:
+        case UART_RX_START_CHARACTER:
 					// Reset buffer index
 					UART1IndexRx = 0;
-	        	default:
-					UART1RxBuffer[UART1IndexRx] = UART1RxData;
-	            	UART1IndexRx ++;
-					UART1RxBuffer[UART1IndexRx] = 0;
-	        		if (UART1IndexRx >= UART_MAX_RX_BUFFER_SIZE)  // clear buffer
-	            		UART1IndexRx = 0;
+        	default:
+					// corectat: in original, la ultimul index valabil (255)
+					// se scria in plus 1 byte DIN AFARA bufferului
+					// (UART1RxBuffer[256]); acum terminatorul sta mereu
+					// in interior si bufferul se curata la suparincare
+					if (UART1IndexRx < UART_MAX_RX_BUFFER_SIZE - 1)
+					 {
+					 UART1RxBuffer[UART1IndexRx] = UART1RxData;
+					 UART1RxBuffer[UART1IndexRx + 1] = 0;
+					 UART1IndexRx++;
+					 }
+					else
+					 UART1IndexRx = 0;
 						
 				}//end switch (UART1RxData)
 			} // end while read from FIFO
@@ -140,8 +147,21 @@ void SelUART1SendTxBuffer(unsigned char *text)
 	{
 	unsigned int i;
 	unsigned char c;
+	unsigned long timeout;
     if(text[0] == 0) return;
-	while(UART1FLAG_TxEmpty == 0); // astept terminarea transmisiei anterioare
+	// corectat: busy-waitul original NU avea timeout - daca TX nu se
+	// terminase (linie blocata, receptor mort), intregul sistem ramanea
+	// agalat aici pentru totdeauna. Acum: astept maxim ~50 ms si repornesc
+	// starea de transmitere.
+	timeout = 0;
+	while(UART1FLAG_TxEmpty == 0 && timeout < 600000) timeout++;
+	if(UART1FLAG_TxEmpty == 0)
+	 {
+	 // transmisie anterioara blocata - fortez starea si continui
+	 SelUART1TransmitDisable();
+	 UART1FLAG_TxEmpty = 1;
+	 UARTIntDisable(UART1_BASE, UART_INT_TX);
+	 }
 	for(i=0;i< UART_MAX_TX_BUFFER_SIZE- 4;i++)
 	   {
 	   c=text[i] ;

@@ -77,7 +77,6 @@ extern int KeyNone;
 extern int LastKey;
 
 
-void ReadKeys(void);
 void ExecuteKeys(void);
 
 

@@ -51,7 +51,6 @@ void SendDBuff(void)
 
 void DecodeMsg(unsigned char *msg){
  int v1,v2,v3,v4,i;
- unsigned char c;
  switch(msg[0]) {
 	  case '#':
 	  	switch(msg[1]){
@@ -156,14 +155,18 @@ void DecodeMsg(unsigned char *msg){
 					 };
 					 
 				break;
-				case 'W': case 'w': // RUN time msg
-					for(i=0;i<20;i++)
-						 {
-					 c=msg[i];
-					 WMessage[i]=c;
-					 if(c==0) i=21;
+			case 'W': case 'w': // RUN time msg
+					// corectat: copiere limitata + terminator garantat
+					// (in original, un mesaj cu >20 caractere ne-nule lasa
+					// WMessage fara '\0' si DisplaySString citea memorie veche)
+					i=0;
+					while(i<23 && msg[i])
+					 {
+					 WMessage[i]=msg[i];
+					 i++;
 					 };
-					HaveWMessage=1;
+					WMessage[i]=0;
+						HaveWMessage=1;
 							break;  
 				default:   
 
@@ -180,10 +183,13 @@ void DecodeMsg(unsigned char *msg){
  }
 
 
+// BUG corectat: in original, `if(v<vmax) return 1;` facea ca o valoare
+// VALIDA (in interval) sa "returneze eroare", iar una invalida (peste vmax)
+// sa returneze 0. Acum: -1 = sub minim, 1 = peste maxim, 0 = in interval.
 int NotInArea(int v, int vmin, int vmax)
 {
    if(v<vmin) return -1;
-   if(v<vmax)  return 1;
+   if(v>vmax) return 1;
    return 0;
 }
 

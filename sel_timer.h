@@ -28,7 +28,10 @@
 //#define TIMER_1_LOAD_INTERVAL					(SysCtlClockGet() / 1000)
 #define TIMER_1A_DESIRED_INITIAL_FRECQUENCY		100
 
-// Timer 1 B configuration for 1/5 s
+// Timer 1 B - ATENTIE: cu prescaler 255 si load 1000 perioada reala e
+// 50MHz/(256*1000) = 5.12 ms, NU 1 ms (comentariul original era gresit).
+// Bit1ms nu e folosit ca flag de 1 ms in codul actual, deci nu am schimbat
+// timpii hardware. Pentru 1 ms ar fi: prescaler 255, load 195.
 #define TIMER_1B_PRESCALLER_VALUE				255   //has to be max 255 (0xff)
 #define TIMER_1B_LOAD_INTERVAL					1000
 

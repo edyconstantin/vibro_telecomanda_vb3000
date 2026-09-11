@@ -111,7 +111,6 @@ void DrawScreen(void )
 	char text[64];
 	//char KText[64];
     int v1,v2,i;
-	float f1;
     switch(MainStatusMachine)
 	   {
 
@@ -288,154 +287,8 @@ void DrawScreen(void )
 	       //DisplaySString("Next",102,7,1);
 
 	   break;
-	   case MSM_SET4:			 
-	       ClearPage(0);
- 		   Chenar();
-		   DisplaySString("Trigger:", 40, 0,0);
-
-
-			// Desenul
-			
- /*
-			sprintf(text,"Ch %1d ",DetectChannel);
-			DisplaySString((unsigned char *)text,1,0,selected_Parameter == SELECTED_DetectedChannel);
-			sprintf(text,"Rct%1d",DetectChannel? IsRectified1 : IsRectified0);
-			DisplaySString((unsigned char *)text,2,2,selected_Parameter == SELECTED_Rectified);
-			sprintf(text,"Inv%1d",DetectChannel? IsReverted1 : IsReverted0);
-			DisplaySString((unsigned char *)text,2,3,selected_Parameter == SELECTED_Reverted);
-		
-			DisplaySString("Lev.",2,5,selected_Parameter == SELECTED_Level);
-			sprintf(text,"%04d",DetectChannel? DetectLevel1 : DetectLevel0);
-			DisplaySString((unsigned char *)text,2,6,selected_Parameter == SELECTED_Level);
-
-			DisplaySString("Smp.",97,1,selected_Parameter == SELECTED_NSamples);
-			sprintf(text,"%04d",DetectChannel? NSamples1 : NSamples0);
-			DisplaySString((unsigned char *)text,97,2,selected_Parameter == SELECTED_NSamples);
-
-			DisplaySString("Bld.",97,3,selected_Parameter == SELECTED_Blind);
-			sprintf(text,"%04d",DetectChannel? BlindSamples1 : BlindSamples0);
-			DisplaySString((unsigned char *)text,97,4,selected_Parameter == SELECTED_Blind);
-
-			DisplaySString("Amp.",97,5,selected_Parameter == SELECTED_Amplify);
-			sprintf(text,"%04d",DetectChannel? Amplify1 : Amplify0);
-			DisplaySString((unsigned char *)text,97,6,selected_Parameter == SELECTED_Amplify);
-
-		    PutHorizontalLine(1,127,8);
-		    PutVerticalLine(32,1,55);
-		    PutVerticalLine(95,1,55);
-
-			// Desenele
-			switch(selected_Parameter)
-				{
-				case SELECTED_DetectedChannel:
-				case SELECTED_Rectified:
-                case SELECTED_Reverted:
-                case SELECTED_Level:
-					PutLine(36, 32, 46,32);
-					if(DetectChannel) 
-					        v1 = 50 - (float)DetectLevel1 * 0.039; // 1... 1022  -> 50-10
-						 else
-					        v1 = 50 - (float)DetectLevel0 * 0.039; // 1... 1022  -> 50-10
-					if(v1<10) v1=10;
-					if(v1>50) v1=50;                
-
-					if(DetectChannel? IsReverted1 : IsReverted0)
-					  {
-					  PutLine(46, 32, 52,50);
-					  PutLine(52, 50, 58,32);
-					  if(DetectChannel? IsRectified1 : IsRectified0)	    
-					    {
-					    PutLine(58, 32, 64,50);
-					    PutLine(64, 50, 70,32);
-						}
-						else
-						{
-					    PutLine(58, 32, 64,10);
-					    PutLine(64, 10, 70,32);
-						}
-					  }
-					  else
-					  {
-					  PutLine(46, 32, 52,10);
-					  PutLine(52, 10, 58,32);
-					  if(DetectChannel? IsRectified1 : IsRectified0)
-					    {
-					    PutLine(58, 32, 64,10);
-					    PutLine(64, 10, 70,32);
-						}
-						else
-						{
-					    PutLine(58, 32, 64,50);
-					    PutLine(64, 50, 70,32);
-						}
-					  }
-					PutLine(36, v1, 40,v1);
-					PutPixel(39,v1-1);
-					PutPixel(39,v1+1);
-					PutLine(70, 32, 93,32);
-				break;
-                case SELECTED_NSamples:
-				break;
-                case SELECTED_Blind:
-				break;
-                case SELECTED_Amplify:
-				break;
-
-				
-				
-				
-				};
-
-			switch(selected_Parameter)
-			   {								  
-			   case SELECTED_DetectedChannel:
-					 if(InDecPlus(&v1)>0) DetectChannel =1;
-					 if(InDecPlus(&v1)<0) DetectChannel =0;
-			   break;
-			   case SELECTED_Rectified: 
-					 if(DetectChannel)
-					    {
-						if(InDecPlus(&v1)>0) IsRectified1 =1 ;
-					    if(InDecPlus(&v1)<0) IsRectified1 =0 ;
-						}
-						else
-						{
-						if(InDecPlus(&v1)>0) IsRectified0 =1 ;
-					    if(InDecPlus(&v1)<0) IsRectified0 =0 ;
-						};
-			   break;
-			   case SELECTED_Reverted: 
-					 if(DetectChannel)
-					    {
-						if(InDecPlus(&v1)>0) IsReverted1 =1 ;
-					    if(InDecPlus(&v1)<0) IsReverted1 =0 ;
-						}
-						else
-						{
-						if(InDecPlus(&v1)>0) IsReverted0 =1 ;
-					    if(InDecPlus(&v1)<0) IsReverted0 =0 ;
-						};
-			   break;
-			   case SELECTED_Level:    if(DetectChannel) InDecrement(&DetectLevel1,1,1023); else InDecrement(&DetectLevel0,0,1023); break;
-			   case SELECTED_NSamples: if(DetectChannel) InDecrement(&NSamples1,1,50); else InDecrement(&NSamples0,1,50);			    break;
-			   case SELECTED_Blind:    if(DetectChannel) InDecrement(&BlindSamples1,0,5000); else InDecrement(&BlindSamples0,0,5000); break;
-			   case SELECTED_Amplify:  if(DetectChannel) InDecrement(&Amplify1,0,18); else InDecrement(&Amplify0,0,18); break;
-
-
-			   }
-			   
-			switch(LastKey)
-			  {
-			  case KEY_KBSELECT:  selected_Parameter++;  if(selected_Parameter > SELECTED_Amplify) selected_Parameter= SELECTED_DetectedChannel;  break;
-			  case KEY_KBPREV:    selected_Parameter=SELECTED_OnDelay;  MainStatusMachine=MSM_SET1;	  break;
-			  //case KEY_KBSLIDE:   MainStatusMachine=MSM_GO_SLIDE;     break;
-			  //case KEY_KBSWEEP:   MainStatusMachine=MSM_GO_SWEEP;    break;
-			  case KEY_KBSLIDE:  LastCommand = LC_SLIDE_MODE  | LastCmd, LastCmd = LC_NONE;     break;
-			  case KEY_KBSWEEP:  LastCommand = LC_SWEEP_MODE  | LastCmd, LastCmd = LC_NONE;     break;
-			  };
-			LastKey=KeyNone;  
- 	        DisplaySString("Prev",1,7,1);
-*/
+	   case MSM_SET4:
+	       // (in original, continutul era tot comentat - cod mort, sters)
 	   break;
 	   case MSM_SLIDE:
 	       ClearPage(0);
@@ -456,6 +309,8 @@ void DrawScreen(void )
        sprintf((char *)VText,">VVV0000\r");
        if(SV1) VText[4]='1',FillRect(11,3,11); else FillRect(11,4,11);
        if(SV2) VText[5]='1',FillRect(59,3,11); else FillRect(59,4,11);
+       // TODO: blocul SV3 pare copy-paste gresit (fara else, acopera
+       // aceeasi locatie ca SV2) - de verificat in hardware
        if(SV3) VText[6]='1',FillRect(59,4,11); 
 		   if(SV4) VText[7]='1',FillRect(107,3,11); else FillRect(107,4,11);
 		     //LastCommand |= LC_SLIDE_ACT;
@@ -565,14 +420,13 @@ void DrawScreen(void )
 								}
 				   	 };
 				   //*******************************************
-				   f1= 1 / (float)(TmsecMaxim-TmsecMinim);
-				   // numarator:  47 (55-8)
-				   // numitor (TmsecMaxim-TmsecMinim;
-				   
+				   // Optimizare: aritmetica pe intregi (fara float - pe LM3S2965
+				   // nu exista FPU, floatul e soft si lent)
 				   for(i=2;i<126;i++)
 				      {
 							v2= TabelGrafic[i]-TmsecMinim;
-							v1= 55-(int)((float)(v2*47)*f1);
+							if(v2<0) v2=0;
+							v1= 55-(v2*47)/(TmsecMaxim-TmsecMinim);
 							if(v1<8) v1=8;
 							if(v1>55) v1=55;
 							PutVerticalLine(i,v1,55);
@@ -605,20 +459,18 @@ void DrawScreen(void )
 						LastV2=0;
 			  	 ///LastCommand = LC_RUN_STOP;
 					  LastCommand = LC_RUN_START; 
-			     break; 
+				break; 
 				default:
-					f1= 1 / (float)(TmsecMaxim-TmsecMinim);
-				   // numarator:  47 (55-8)
-				   // numitor (TmsecMaxim-TmsecMinim;
-				   
+				   // Optimizare: aritmetica pe intregi (fara float)
 				   for(i=2;i<126;i++)
 				      {
-							v2= TabelGrafic[i]-TmsecMinim;
-							v1= 55-(int)((float)(v2*47)*f1);
-							if(v1<8) v1=8;
-							if(v1>55) v1=55;
-							PutVerticalLine(i,v1,55);
-							}
+				        v2= TabelGrafic[i]-TmsecMinim;
+						if(v2<0) v2=0;
+						v1= 55-(v2*47)/(TmsecMaxim-TmsecMinim);
+						if(v1<8) v1=8;
+						if(v1>55) v1=55;
+						PutVerticalLine(i,v1,55);
+						}
 			  };
 			LastKey=KeyNone;  
 	   break;
@@ -652,7 +504,9 @@ void DrawScreen(void )
      DisplaySString((unsigned char*)text,30,7,0);
 	 //DisplaySString(WMessage, 0, 6,0);
 
-	 RefreshPage();
+	 // Optimizare: se retrimite pe afisaj DOAR daca s-a modificat ceva
+	 // (inainte: pagina intreaga la fiecare 10 ms, ~12 ms CPU de fiecare data)
+	 if (LCD_IsDirty()) RefreshPage();
 
 }
 
